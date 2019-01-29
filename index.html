@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+    See the example:
+    https://bytutorial.com/tutorials/google-api/introduction-to-google-drive-api-using-javascript
+-->
+<html>
+<head>
+    <title>Google Drive API - LOGIN</title>
+</head>
+<body>
+
+
+<table>
+    <tr>
+        <td style="width:100%;"></td>
+        <td>
+            <nobr>
+                <span id="span-name"></span>
+                <button id="btn-login" onclick="App.app.handleAuthClick()" style="display:none;">Login</button>
+                <button id="btn-logout" onclick="App.app.handleSignoutClick()" style="display:none;">Logout</button>
+            </nobr>
+        </td>
+    </tr>
+</table>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script async defer src="https://apis.google.com/js/api.js"
+        onload="this.onload=function(){};new App();"
+        onreadystatechange="if (this.readyState === 'complete') this.onload()">
+</script>
+
+
+
+
+<script>
+class App {
+    constructor() {
+        App.app = this;
+        this.SCOPES = ['https://www.googleapis.com/auth/drive', 'profile']
+        this.handleClientLoad();
+    }
+
+    handleClientLoad() {
+        gapi.load('client:auth2', this.initClient);
+    }
+
+    initClient() {
+        gapi.client.init({
+            //apiKey: API_KEY, //THIS IS OPTIONAL AND WE DONT ACTUALLY NEED THIS, BUT I INCLUDE THIS AS EXAMPLE
+            clientId: '955915951176-v9nvs56thkpg7l51palu1g751cacmkhf.apps.googleusercontent.com',
+            scope: App.app.SCOPES.join(' ')
+        }).then(function () {
+            gapi.auth2.getAuthInstance().isSignedIn.listen(App.app.updateSigninStatus);
+            App.app.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+        });
+    }
+
+    updateSigninStatus(isSignedIn) {
+        if (isSignedIn) {
+            $("#btn-login").hide();
+            $("#btn-logout").show();
+            $("#span-name").show();
+
+
+            var profile = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile()
+            // console.log('currentUser===', profile.getEmail())
+            // console.log('currentUser===', profile.getImageUrl())
+            // console.log('currentUser===', profile.getName())
+            //gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token
+            $("#span-name").html(profile.getName() + ' (' + profile.getEmail() + ')');
+
+            gapi.client.load('drive', 'v3', App.app.workingWithDrive);
+        } else {
+            $("#btn-login").show();
+            $("#btn-logout").hide();
+            $("#span-name").hide();
+        }
+    }
+
+    handleAuthClick(event) {
+        gapi.auth2.getAuthInstance().signIn();
+    }
+
+    handleSignoutClick(event) {
+        gapi.auth2.getAuthInstance().signOut();
+    }
+
+    workingWithDrive() {
+        console.log('---workingWithDrive');
+        var request = gapi.client.drive.about.get();
+    }
+}
+
+</script>
+
+</body>
+</html>
