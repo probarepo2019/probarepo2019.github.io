@@ -219,8 +219,8 @@ $(function() {
     var dialog = new DialogAddUser('dialog-form', {
         title: "Create new user 111",
         tips: "All form fields are required. 222",
-        height: 400,
-        width: 750,
+        //height: 400,
+        //width: 750,
         fields: [{
             name: "Name",
             type: "text",
