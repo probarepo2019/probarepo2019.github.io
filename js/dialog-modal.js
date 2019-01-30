@@ -58,7 +58,6 @@ $(function() {
             //this.emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
             var html = this.getHtml();
-            // log('html===', html)
             $("body").append(html);
             this.init();
 
@@ -78,25 +77,35 @@ $(function() {
         }
 
         getHtml() {
-            return `
-<div id="dialog-form" title="` + this.params.title + `" style="display:none;">
-    <p class="validateTips">` + this.params.tips + `</p>
+            var html = '<div id="dialog-form" title="' + this.params.title + '" style="display:none;">';
+            html += '<p class="validateTips">' + this.params.tips + '</p>';
+            html += '<form><fieldset>';
 
-    <form>
-        <!--<fieldset>-->
-            Name:
-            <input type="text" name="name" id="name" value="Jane Smith" class="text ui-widget-content ui-corner-all">
-            <label for="email">Email</label>
-            <input type="text" name="email" id="email" value="jane@smith.com" class="text ui-widget-content ui-corner-all">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" value="xxxxxxx" class="text ui-widget-content ui-corner-all">
+            var fields = this.params.fields;
 
-            <!-- Allow form submission with keyboard without duplicating the dialog button -->
-            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-        <!--</fieldset>-->
-    </form>
-</div>
-        `;
+            for(var i in fields) {
+                switch(fields[i].type) {
+                    case "text":
+                    case "password":
+                        html += '<label for="' + fields[i].id + '">' + fields[i].name + '</label>';
+                        html += '<input type="' + fields[i].type + '" name="' + fields[i].name + '" id="' + fields[i].id + '" value="' + fields[i].value + '" class="text ui-widget-content ui-corner-all">';
+                        break;
+                    case "select":
+                        html += '<label for="' + fields[i].id + '">' + fields[i].name + '</label>';
+                        html += '<select id="' + fields[i].id + '">';
+                        for(var key in fields[i].values) {
+                            html += '<option value="' + key + '" ';
+                            if(fields[i].value == key) html += ' selected="selected" ';
+                            html += '>' + fields[i].values[key] + '</option>';
+                        }
+                        //values: {"volvo":"Volvo", "saab":"Saab", "mercedes":"Mercedes", "audi":"Audi"},
+                        html += '</select>';
+                        break;
+                }
+            }
+            html += '<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">';
+            html += '</fieldset></form></div>';
+            return html;
         }
 
         init() {
@@ -132,6 +141,13 @@ $(function() {
                 event.preventDefault();
                 THIS.callCallback(THIS)
             });
+
+            // select settings
+            for(var i in this.params.fields) {
+                if(this.params.fields[i].type == 'select')
+                $( '#' + this.params.fields[i].id ).selectmenu();
+            };
+
         }
 
         callCallback(THIS) {
@@ -156,8 +172,12 @@ $(function() {
             }
 
             for(i in THIS.params.fields) {
-                valid = valid && THIS.checkLength(THIS, THIS.params.fields[i].selector, THIS.params.fields[i].id, THIS.params.fields[i].minSize, THIS.params.fields[i].maxSize);
-                valid = valid && THIS.checkRegexp(THIS, THIS.params.fields[i].selector, THIS.params.fields[i].regexp, THIS.params.fields[i].errMsg);
+                switch(THIS.params.fields[i].type) {
+                    case "text":
+                    case "password":
+                        valid = valid && THIS.checkLength(THIS, THIS.params.fields[i].selector, THIS.params.fields[i].id, THIS.params.fields[i].minSize, THIS.params.fields[i].maxSize);
+                        valid = valid && THIS.checkRegexp(THIS, THIS.params.fields[i].selector, THIS.params.fields[i].regexp, THIS.params.fields[i].errMsg);
+                }
             }
 
             // valid = valid && THIS.checkLength(THIS, THIS.name, "username", 3, 16);
@@ -221,25 +241,8 @@ $(function() {
         tips: "All form fields are required. 222",
         //height: 400,
         //width: 750,
-        fields: [{
-            name: "Name",
-            type: "text",
-            id: "name",
-            value: "Jane Smith",
-            minSize: 3,
-            maxSize: 16,
-            regexp: /^[a-z]([0-9a-z_\s])+$/i,
-            errMsg: "Username may consist of a-z, 0-9, underscores, spaces and must begin with a letter."
-        },{
-            name: "Email",
-            type: "text",
-            id: "email",
-            value: "jane@smith.com",
-            minSize: 6,
-            maxSize: 80,
-            regexp: emailRegex,
-            errMsg: "eg. ui@jquery.com"
-        },{
+        fields: [
+            {
             name: "Password",
             type: "password",
             id: "password",
@@ -249,7 +252,35 @@ $(function() {
             regexp: /^([0-9a-zA-Z])+$/,
             errMsg: "Password field only allow : a-z 0-9"
 
-        }],
+        },
+            {
+                name: "Name",
+                type: "text",
+                id: "name",
+                value: "Jane Smith",
+                minSize: 3,
+                maxSize: 16,
+                regexp: /^[a-z]([0-9a-z_\s])+$/i,
+                errMsg: "Username may consist of a-z, 0-9, underscores, spaces and must begin with a letter."
+            },
+            {
+                name: "Select",
+                type: "select",
+                id: "id_select",
+                value: "saab",
+                values: {"volvo":"Volvo", "saab":"Saab", "mercedes":"Mercedes", "audi":"Audi"},
+            },
+            {
+                name: "Email",
+                type: "text",
+                id: "email",
+                value: "jane@smith.com",
+                minSize: 6,
+                maxSize: 80,
+                regexp: emailRegex,
+                errMsg: "eg. ui@jquery.com"
+            },
+        ],
         callback: function (result) {
             log('---callback   result===', result)
             $("#users tbody").append("<tr>" +

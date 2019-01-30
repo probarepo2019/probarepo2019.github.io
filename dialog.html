@@ -31,8 +31,14 @@
             $( "#tabs" ).tabs({heightStyle: "fill"});
         } );
     </script>
+
+
+
 </head>
 <body style="border: 0px solid green; height:100%;">
+<div id="target">
+    Right-click here
+</div>
 
 <!--<div id="dialog-form" title="Create new user">-->
     <!--<p class="validateTips">All form fields are required.</p>-->
@@ -92,7 +98,12 @@
 </div>
 
 
+<script>
+    $( "#target" ).contextmenu(function() {
+        console.log( "Handler for .contextmenu() called." );
+    });
 
+</script>
 
 </body>
 </html>
